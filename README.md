@@ -7,7 +7,7 @@ https://privatekeyfinder.io/bitcoin-puzzle<br>
 
 ### bitcoin puzzle
 pip3 install bit<br>
-python3 puzzle.py><br>
+python3 puzzle.py<br>
 example for 4 bit puzzle :<br>
 ```
 $ python3 puzzle.py
