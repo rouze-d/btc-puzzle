@@ -29,4 +29,18 @@ Bitcoin Address Compressed :  1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e
 PrivateKey (wif) Compressed :  KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU77MfhviY5
 
 ```
+python3 puzzle2.py
+add more for the selected range
+```
+$ python3 puzzle2.py
+Bitcoin Addresses Loading Please Wait: 
+Start HEX [exp: 40000000000000000 (67 bits)] : 2000
+End HEX   [exp: 7ffffffffffffffff (67 bits)] : 3fff
 
+Good Luck !
+6397 0000000000000000000000000000000000000000000000000000000000002930 1ErZWg5cFCe4Vw5BzgfzB74VNLaXEiEkhk
+
+THANKS GOD !! i winn !!
+PrivateKey HEX:  0000000000000000000000000000000000000000000000000000000000002930 
+Bitcoin Address Compressed :  1ErZWg5cFCe4Vw5BzgfzB74VNLaXEiEkhk
+```
