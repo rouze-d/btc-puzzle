@@ -1,60 +1,74 @@
 #!/usr/bin/env python3
 
-# just crack and show compress address
-from bit import *
+from bit import Key
 from bit.format import bytes_to_wif
 import random
-from multiprocessing import Event, Process, Queue, Value, cpu_count
+import os
+from multiprocessing import Process, cpu_count, Event
+import time
 
-print('Bitcoin Addresses Loading Please Wait: ')
-filename ='puzzle.txt'
-with open(filename) as f:
-    line_count = 0
-    for line in f:
-        line != "\n"
-        line_count += 1
-with open(filename) as file:
-    add = file.read().split()
-add = set(add)
+# Config
+ADDRESS_FILE = 'puzzle.txt'
+WINNER_FILE = 'winner.txt'
+PRINT_INTERVAL = 1000  # Print status every N attempts per worker
 
-print("Total Bitcoin Address Loaded    :",str (line_count))
-#x=int(input("Start range Min BITs 0 or Higher (Puzzle StartNumber) -> "))
-#a = 2**x
-y=int(input("BitCoin Puzzle Bits ( exp: 66 ) : "))
-b = 2**y
-a = 2**(y-1)
-print("Starting search... Please Wait")
-print("Min range: " + str(a))
-print("Max range: " + str(b))
-print("==========================================================")
+# Load address set
+def load_addresses(filename):
+    with open(filename) as f:
+        addresses = set(line.strip() for line in f if line.strip())
+    print("Total Bitcoin Addresses Loaded:", len(addresses))
+    return addresses
 
-count=0
-total=0
-while True:
-    ran = random.randrange(a,b)
-    seed = str(ran)
-    key = Key.from_int(ran)
+# Worker function
+def worker(addresses, a, b, stop_event, worker_id):
+    attempts = 0
+    while not stop_event.is_set():
+        ran = random.randrange(a, b)
+        key = Key.from_int(ran)
+        wifc = bytes_to_wif(key.to_bytes(), compressed=True)
+        caddr = key.address
 
+        if caddr in addresses:
+            print(f"[WORKER-{worker_id}] MATCH FOUND!")
+            with open(WINNER_FILE, 'a') as f:
+                f.write(f'\n[WORKER-{worker_id}] PrivateKey (DEC): {ran}')
+                f.write(f'\nPrivateKey (HEX): {key.to_hex()}')
+                f.write(f'\nBitcoin Address (Compressed): {caddr}')
+                f.write(f'\nPrivateKey (WIF): {wifc}\n\n')
+            stop_event.set()
+            break
 
-    wifc = bytes_to_wif(key.to_bytes(), compressed=True) # Compressed WIF
-    #wifu = bytes_to_wif(key.to_bytes(), compressed=False) # Uncompressed WIF
-    #keyu = Key(wifu)
+        attempts += 1
+        if attempts % PRINT_INTERVAL == 0:
+            print(f"[WORKER-{worker_id}] Attempts: {attempts} | Addr: {caddr} | Priv: {key.to_hex()}")
 
+# Main
+def main():
+    y = int(input("BitCoin Puzzle Bits ( exp: 66 ) : "))
+    a = 2**(y - 1)
+    b = 2**y
 
-    caddr = key.address
-    #uaddr = keyu.address
+    print("Starting search with multiprocessing...")
+    print(f"Range: {a} to {b}")
+    print("==========================================================")
 
+    addresses = load_addresses(ADDRESS_FILE)
+    stop_event = Event()
 
-    count+=1
-    total+=1
-    #print ('Total= ',total, key.to_hex(), caddr, end='\n') # ori
-    print (total, caddr, key.to_hex(), wifc)#, end='\r')
+    workers = []
+    for i in range(cpu_count()):
+        p = Process(target=worker, args=(addresses, a, b, stop_event, i))
+        p.start()
+        workers.append(p)
 
-    if caddr in add:
-        print (total, 'Matching Key ==== Found!!!\n PrivateKey DEC: ',seed, '\nMatching Key ==== Found!!!\n PrivateKey HEX: ', key.to_hex(), '\nBitcoin Address Compressed : ', caddr, '\nPrivateKey (wif) Compressed : ', wifc)
-        f=open("winner.txt","a")
-        f.write('\nPrivateKey (hex): ' + key.to_hex())
-        f.write('\nBitcoin Address Compressed : ' + caddr)
-        f.write('\nPrivateKey (wif) Compressed : ' + wifc)
-        f.close()
-        exit()
+    try:
+        for p in workers:
+            p.join()
+    except KeyboardInterrupt:
+        print("\nStopping all workers...")
+        stop_event.set()
+        for p in workers:
+            p.terminate()
+
+if __name__ == "__main__":
+    main()
