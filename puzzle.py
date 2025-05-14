@@ -48,7 +48,7 @@ def worker_proc(shared_data):
         h160 = privatekey_to_h160(0, True, pvk)  # addr_type=0, compressed=True
         if check_collision(h160):
             address = privatekey_to_address(0, True, pvk)
-            return colored(f"[+] MATCH FOUND!\nPrivate Key: {hex(pvk)}\nAddress: {address}", 'yellow')
+            return colored(f"\n[+] MATCH FOUND!\nPrivate Key: {hex(pvk)[2:].zfill(64)}\nAddress: {address}", 'green')
 
     with lock:
         attempts.value += BATCH_SIZE
