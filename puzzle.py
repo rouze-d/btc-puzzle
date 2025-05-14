@@ -48,19 +48,25 @@ def worker_proc(shared_data):
         h160 = privatekey_to_h160(0, True, pvk)  # addr_type=0, compressed=True
         if check_collision(h160):
             address = privatekey_to_address(0, True, pvk)
-            return colored(f"\n[+] MATCH FOUND!\nPrivate Key: {hex(pvk)[2:].zfill(64)}\nAddress: {address}", 'green')
+            found_text = f"\n[+] MATCH FOUND!\nPrivate Key: {hex(pvk)[2:].zfill(64)}\nAddress: {address}\n"
+            
+            # Save to FOUND.txt
+            with open("FOUND.txt", "a") as f:
+                f.write(found_text)
+            
+            return colored(found_text, 'green')
 
     with lock:
         attempts.value += BATCH_SIZE
         elapsed_time = time.time() - start_time
         speed = attempts.value / elapsed_time if elapsed_time > 0 else 0
         if attempts.value % PRINT_INTERVAL == 0:
-            # Show last key and address from batch
             last_key = keys[-1]
             last_address = privatekey_to_address(0, True, last_key)
             print(f"[=] {colored(f'{attempts.value:,}', 'blue')} | Speed: {colored(f'{speed:,.0f} keys/s', 'yellow')} {colored(last_address, 'cyan')} {colored(hex(last_key)[2:].zfill(64), 'magenta')} ", end="\n")
 
     return None
+
 
 def main():
     print(f"{colored('[*] Starting', 'green')} {NUM_PROCESSES} processes — Random Brute Force Mode")
